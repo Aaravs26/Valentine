@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Be My Valentine 💘</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+  }
+
+  body {
+    margin: 0;
+    height: 100vh;
+    background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .container {
+    text-align: center;
+    background: rgba(255,255,255,0.95);
+    padding: 30px 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    z-index: 2;
+  }
+
+  h1 {
+    color: #ff4d6d;
+    min-height: 60px;
+  }
+
+  .dog {
+    font-size: 120px;
+    margin: 15px 0;
+    animation: float 2s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 10px;
+    position: relative;
+  }
+
+  button {
+    padding: 12px 30px;
+    font-size: 18px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    white-space: nowrap;
+  }
+
+  #yesBtn {
+    background: #ff4d6d;
+    color: white;
+  }
+
+  .no-wrapper {
+    position: relative;
+  }
+
+  #noBtn {
+    background: #ccc;
+    color: #333;
+  }
+
+  .message {
+    margin-top: 15px;
+    color: #ff4d6d;
+    min-height: 24px;
+  }
+
+  .celebration {
+    display: none;
+  }
+
+  canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container" id="main">
+  <h1 id="question"></h1>
+
+  <div class="dog">🐶💖</div>
+
+  <div class="buttons">
+    <button id="yesBtn">Yes 💕</button>
+
+    <div class="no-wrapper" id="noWrapper">
+      <button id="noBtn">No 🙃</button>
+    </div>
+  </div>
+
+  <div class="message" id="message"></div>
+</div>
+
+<div class="container celebration" id="celebration">
+  <h1>YAAAY PRAGS!!! 💘✨</h1>
+  <p>You just made me the happiest person alive 🥰</p>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* Typing effect */
+  const questionText = "Prags, will you be my Valentine? 💕";
+  const questionEl = document.getElementById("question");
+  let i = 0;
+  const typing = setInterval(() => {
+    questionEl.textContent += questionText[i++];
+    if (i >= questionText.length) clearInterval(typing);
+  }, 70);
+
+  const yesBtn = document.getElementById("yesBtn");
+  const noBtn = document.getElementById("noBtn");
+  const noWrapper = document.getElementById("noWrapper");
+  const message = document.getElementById("message");
+  const main = document.getElementById("main");
+  const celebration = document.getElementById("celebration");
+
+  let noCount = 0;
+  let yesScale = 1;
+  let noScale = 1;
+  let dodgeEnabled = false;
+
+  const messages = [
+    "Wrong answer 😜",
+    "Try again 😏",
+    "Okay now you're just teasing 😳"
+  ];
+
+  function moveNoButton() {
+    const x = Math.random() * 260 - 130;
+    const y = Math.random() * 120 - 60;
+    noWrapper.style.transform = `translate(${x}px, ${y}px)`;
+  }
+
+  noBtn.addEventListener("click", () => {
+    noCount++;
+    message.textContent = messages[Math.min(noCount - 1, messages.length - 1)];
+
+    yesScale += 0.2;
+    yesBtn.style.transform = `scale(${yesScale})`;
+
+    noScale = Math.max(0.45, noScale - 0.15);
+    noBtn.style.transform = `scale(${noScale})`;
+
+    if (noCount === 3) {
+      dodgeEnabled = true;
+      moveNoButton();
+    }
+  });
+
+  noWrapper.addEventListener("mouseenter", () => {
+    if (dodgeEnabled) moveNoButton();
+  });
+
+  yesBtn.addEventListener("click", () => {
+    if (!confirm("Are you really, REALLY sure? 💖")) return;
+
+    playMagicalYesSound();
+    main.style.display = "none";
+    celebration.style.display = "block";
+    startConfetti();
+  });
+
+  /* ✨ Magical romantic YES sound */
+  function playMagicalYesSound() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+
+    // ✨ Fairy sparkle run
+    const sparkleNotes = [1175, 1397, 1760, 2093]; // D6 F6 A6 C7
+    sparkleNotes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = freq;
+
+      gain.gain.setValueAtTime(0, now + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0.18, now + i * 0.08 + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.55);
+    });
+
+    // 🎺 Gentle celebratory chord
+    const chordNotes = [523, 659, 784]; // C5 E5 G5
+    chordNotes.forEach(freq => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.value = freq;
+
+      gain.gain.setValueAtTime(0, now + 0.5);
+      gain.gain.linearRampToValueAtTime(0.25, now + 0.6);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now + 0.5);
+      osc.stop(now + 1.7);
+    });
+  }
+
+  /* 💖 Heart confetti */
+  const canvas = document.getElementById("confetti");
+  const ctx = canvas.getContext("2d");
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+
+  const hearts = [];
+
+  function createHeart() {
+    return {
+      x: Math.random() * canvas.width,
+      y: -20,
+      size: Math.random() * 12 + 10,
+      speed: Math.random() * 2 + 2,
+      color: `hsl(${Math.random() * 360},100%,65%)`
+    };
+  }
+
+  function drawHeart(x,y,s,c) {
+    ctx.fillStyle = c;
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+    ctx.bezierCurveTo(x-s/2,y-s/2,x-s,y+s/3,x,y+s);
+    ctx.bezierCurveTo(x+s,y+s/3,x+s/2,y-s/2,x,y);
+    ctx.fill();
+  }
+
+  function startConfetti() {
+    for (let i=0;i<140;i++) hearts.push(createHeart());
+    requestAnimationFrame(update);
+  }
+
+  function update() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    hearts.forEach(h=>{
+      h.y+=h.speed;
+      if(h.y>canvas.height) h.y=-20;
+      drawHeart(h.x,h.y,h.size,h.color);
+    });
+    requestAnimationFrame(update);
+  }
+
+});
+</script>
+
+</body>
+</html>
